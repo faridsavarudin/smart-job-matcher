@@ -203,6 +203,30 @@ export default function Home() {
     return 'Low Match';
   };
 
+  // Calculate statistics for the current job
+  const calculateStats = () => {
+    const excellent = candidatesWithScores.filter(c => c.matchData.score >= 80).length;
+    const good = candidatesWithScores.filter(c => c.matchData.score >= 60 && c.matchData.score < 80).length;
+    const fair = candidatesWithScores.filter(c => c.matchData.score >= 40 && c.matchData.score < 60).length;
+    const poor = candidatesWithScores.filter(c => c.matchData.score < 40).length;
+    const spam = candidatesWithScores.filter(c => c.matchData.isSpam).length;
+    const spamButGood = candidatesWithScores.filter(c => c.matchData.isSpam && c.matchData.score >= 80).length;
+    
+    return {
+      total: candidatesWithScores.length,
+      excellent,
+      good,
+      fair,
+      poor,
+      spam,
+      spamButGood,
+      matched: excellent + good,
+      notMatched: fair + poor
+    };
+  };
+
+  const stats = calculateStats();
+
   return (
     <main className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-7xl mx-auto">
