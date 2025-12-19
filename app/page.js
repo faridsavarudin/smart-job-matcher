@@ -9,20 +9,20 @@ export default function Home() {
   const [selectedJob, setSelectedJob] = useState(companies[0].jobs[0]);
   const [sortBy, setSortBy] = useState('score');
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchFilter, setSearchFilter] = useState('all'); // all, skills, experience, industry
+  const [searchFilter, setSearchFilter] = useState('all');
   const [compareMode, setCompareMode] = useState(false);
   const [selectedForCompare, setSelectedForCompare] = useState([]);
 
   const handleCompanyClick = (company) => {
     setSelectedCompany(company);
-    setSelectedJob(company.jobs[0]); // Select first job of the company
-    setSelectedCandidate(null); // Reset selected candidate
-    setSearchQuery(''); // Reset search
+    setSelectedJob(company.jobs[0]);
+    setSelectedCandidate(null);
+    setSearchQuery('');
   };
 
   const handleJobClick = (job) => {
     setSelectedJob(job);
-    setSelectedCandidate(null); // Reset selected candidate
+    setSelectedCandidate(null);
   };
 
   const toggleCompareMode = () => {
@@ -46,13 +46,11 @@ export default function Home() {
       matchData: calculateMatchScore(c, selectedJob)
     }));
 
-    // Sort by score
     comparisons.sort((a, b) => b.matchData.score - a.matchData.score);
     
     const best = comparisons[0];
     const bestReasons = [];
     
-    // Analyze why this is the best
     if (best.matchData.score >= 80) {
       bestReasons.push(`Exceptional match with ${best.matchData.score}% compatibility`);
     } else if (best.matchData.score >= 60) {
@@ -90,13 +88,11 @@ export default function Home() {
 
   const aiComparison = compareMode && selectedForCompare.length >= 2 ? generateAIComparison() : null;
 
-  // Calculate scores for all candidates
   const candidatesWithScores = candidates.map(candidate => ({
     ...candidate,
     matchData: calculateMatchScore(candidate, selectedJob)
   }));
 
-  // Filter candidates based on search
   const filteredCandidates = candidatesWithScores.filter(candidate => {
     if (!searchQuery.trim()) return true;
     
@@ -132,7 +128,6 @@ export default function Home() {
     return true;
   });
 
-  // Sort candidates
   const sortedCandidates = [...filteredCandidates].sort((a, b) => {
     if (sortBy === 'score') return b.matchData.score - a.matchData.score;
     if (sortBy === 'experience') return b.yearsOfExperience - a.yearsOfExperience;
@@ -155,7 +150,6 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
             <h1 className="text-3xl font-bold text-gray-900">Smart Job Matcher</h1>
@@ -164,7 +158,6 @@ export default function Home() {
           <p className="text-gray-600">CV Parsing & Smart Match for High-Volume Hiring</p>
         </div>
 
-        {/* Company Selector */}
         <div className="mb-6">
           <h2 className="text-sm font-semibold text-gray-700 mb-3">🏢 Select Company</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -193,7 +186,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Job Openings */}
         {selectedCompany && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
@@ -222,7 +214,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* Search & Filters */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
           <div className="flex flex-col md:flex-row gap-3">
             <div className="flex-1">
@@ -269,7 +260,6 @@ export default function Home() {
           )}
         </div>
 
-        {/* Compare Mode Bar */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -290,14 +280,16 @@ export default function Home() {
               )}
             </div>
             {compareMode && selectedForCompare.length >= 2 && (
-              <span className="text-sm text-purple-700 font-medium">
+              <button
+                onClick={() => setSelectedCandidate(null)}
+                className="px-4 py-2 bg-purple-600 text-white rounded-md text-sm font-medium hover:bg-purple-700"
+              >
                 🤖 View AI Comparison
-              </span>
+              </button>
             )}
           </div>
         </div>
 
-        {/* Quick Search Tips */}
         {!searchQuery && !compareMode && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
             <div className="text-sm text-blue-900">
@@ -306,7 +298,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* Compare Mode Instructions */}
         {compareMode && (
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-4">
             <div className="text-sm text-purple-900">
@@ -316,7 +307,6 @@ export default function Home() {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Candidates List */}
           <div className="space-y-3">
             {sortedCandidates.length === 0 ? (
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
@@ -328,11 +318,19 @@ export default function Home() {
               sortedCandidates.map((candidate) => (
               <div
                 key={candidate.id}
-                onClick={() => setSelectedCandidate(candidate)}
+                onClick={() => !compareMode && setSelectedCandidate(candidate)}
                 className={`bg-white rounded-lg shadow-sm border-2 p-4 cursor-pointer transition-all hover:shadow-md ${
-                  selectedCandidate?.id === candidate.id ? 'border-blue-500' : 'border-gray-200'
+                  compareMode && selectedForCompare.find(c => c.id === candidate.id)
+                    ? 'border-purple-500 bg-purple-50'
+                    : selectedCandidate?.id === candidate.id
+                    ? 'border-blue-500'
+                    : 'border-gray-200'
                 } ${candidate.matchData.isSpam ? 'opacity-60' : ''}`}
-              >{compareMode && (
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      {compareMode && (
                         <input
                           type="checkbox"
                           checked={selectedForCompare.find(c => c.id === candidate.id) !== undefined}
@@ -344,10 +342,6 @@ export default function Home() {
                           className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
                         />
                       )}
-                      
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-semibold text-gray-900">{candidate.name}</h3>
                       {candidate.matchData.isSpam && (
                         <span className="px-2 py-0.5 text-xs font-medium bg-red-100 text-red-700 rounded">
@@ -369,7 +363,6 @@ export default function Home() {
                   {candidate.hasManagerialExp && <span>👥 Manager</span>}
                 </div>
 
-                {/* Match Reason Summary */}
                 {candidate.matchData.score > 0 && (
                   <div className="mt-3 pt-3 border-t border-gray-100">
                     <div className="text-xs font-medium text-gray-700 mb-1">
@@ -403,7 +396,6 @@ export default function Home() {
             )}
           </div>
 
-          {/* AI Comparison */}
           <div className="lg:sticky lg:top-8 lg:self-start">
             {compareMode && aiComparison ? (
               <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg shadow-lg border-2 border-purple-300 p-6">
@@ -494,12 +486,7 @@ export default function Home() {
                   ))}
                 </div>
               </div>
-            )
-          </div>
-
-          {/* Detailed View */}
-          <div className="lg:sticky lg:top-8 lg:self-start">
-            {selectedCandidate ? (
+            ) : selectedCandidate ? (
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <div className="flex items-start justify-between mb-6">
                   <div>
@@ -515,7 +502,6 @@ export default function Home() {
                   )}
                 </div>
 
-                {/* Match Score Section */}
                 <div className={`rounded-lg p-4 mb-6 border-2 ${getScoreColor(selectedCandidate.matchData.score)}`}>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">Match Quality Score</span>
@@ -532,7 +518,6 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* AHA! Moment - Match Explanation */}
                 <div className="mb-6">
                   <h3 className="text-sm font-semibold text-gray-900 mb-3">💡 Match Explanation</h3>
                   <div className="space-y-2">
@@ -544,7 +529,6 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Gap Analysis */}
                 {selectedCandidate.matchData.gaps.length > 0 && (
                   <div className="mb-6">
                     <h3 className="text-sm font-semibold text-gray-900 mb-3">📊 Gap Analysis</h3>
@@ -558,7 +542,6 @@ export default function Home() {
                   </div>
                 )}
 
-                {/* Side-by-Side Comparison */}
                 <div className="border-t border-gray-200 pt-6">
                   <h3 className="text-sm font-semibold text-gray-900 mb-4">🔄 Side-by-Side Comparison</h3>
                   
