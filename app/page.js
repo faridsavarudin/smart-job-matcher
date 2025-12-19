@@ -173,14 +173,7 @@ export default function Home() {
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">Search All</option>
-              <option value="slength === 0 ? (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-                <div className="text-gray-400 text-4xl mb-2">🔍</div>
-                <p className="text-gray-500 text-lg mb-1">No candidates found</p>
-                <p className="text-gray-400 text-sm">Try different search terms or clear the search</p>
-              </div>
-            ) : (
-              sortedCandidates.kills">Skills Only</option>
+              <option value="skills">Skills Only</option>
               <option value="experience">Experience Only</option>
               <option value="industry">Industry Only</option>
             </select>
@@ -213,8 +206,7 @@ export default function Home() {
         {!searchQuery && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
             <div className="text-sm text-blue-900">
-              ))
-             💡 <strong>Quick Search Examples:</strong> Try "Python", "5 years", "Banking", "Senior", "Django"
+              💡 <strong>Quick Search Examples:</strong> Try "Python", "5 years", "Banking", "Senior", "Django"
             </div>
           </div>
         )}
@@ -222,7 +214,14 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Candidates List */}
           <div className="space-y-3">
-            {sortedCandidates.map((candidate) => (
+            {sortedCandidates.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+                <div className="text-gray-400 text-4xl mb-2">🔍</div>
+                <p className="text-gray-500 text-lg mb-1">No candidates found</p>
+                <p className="text-gray-400 text-sm">Try different search terms or clear the search</p>
+              </div>
+            ) : (
+              sortedCandidates.map((candidate) => (
               <div
                 key={candidate.id}
                 onClick={() => setSelectedCandidate(candidate)}
@@ -278,7 +277,8 @@ export default function Home() {
 
                 {candidate.matchData.gaps.length > 0 && (
                   <div className="mt-2 pt-2 border-t border-gray-100">
-                    <div className="text-xs text-red-600">
+              ))
+                   <div className="text-xs text-red-600">
                       ⚠️ {candidate.matchData.gaps.length} gap(s) found
                     </div>
                   </div>
@@ -355,11 +355,10 @@ export default function Home() {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div className="bg-blue-50 rounded p-3">
                       <div className="font-medium text-blue-900 mb-2">Job Requirements</div>
-                      <div className="space-y-1 text-blue-800">
-                        <div>• {jobRequirements.minExperience}-{jobRequirements.maxExperience} years exp</div>
-                        <div>• {jobRequirements.requiredLevel} level</div>
-                        <div>• {jobRequirements.requiredIndustry.join('/')}</div>
-                        <div>• Managerial: {jobRequirements.mustHaveManagerial ? 'Required' : 'Optional'}</div>
+                      <div classselectedJob.minExperience}-{selectedJob.maxExperience} years exp</div>
+                        <div>• {selectedJob.requiredLevel} level</div>
+                        <div>• {selectedJob.requiredIndustry.join('/')}</div>
+                        <div>• Managerial: {selectedJob.mustHaveManagerial ? 'Required' : 'Optional'}</div>
                       </div>
                     </div>
 
@@ -380,7 +379,7 @@ export default function Home() {
                       <div>
                         <div className="text-xs text-gray-500 mb-1">Required</div>
                         <div className="flex flex-wrap gap-1">
-                          {jobRequirements.requiredSkills.map(skill => (
+                          {selectedJob.requiredSkills.map(skill => (
                             <span key={skill.name} className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">
                               {skill.name}
                             </span>
@@ -391,6 +390,7 @@ export default function Home() {
                         <div className="text-xs text-gray-500 mb-1">Candidate Has</div>
                         <div className="flex flex-wrap gap-1">
                           {selectedCandidate.skills.map(skill => {
+                            const isRequired = selectedJob=> {
                             const isRequired = jobRequirements.requiredSkills.some(
                               req => req.name.toLowerCase() === skill.toLowerCase()
                             );
