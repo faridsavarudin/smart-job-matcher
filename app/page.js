@@ -277,14 +277,14 @@ export default function Home() {
 
                 {candidate.matchData.gaps.length > 0 && (
                   <div className="mt-2 pt-2 border-t border-gray-100">
-              ))
-                   <div className="text-xs text-red-600">
+                    <div className="text-xs text-red-600">
                       ⚠️ {candidate.matchData.gaps.length} gap(s) found
                     </div>
                   </div>
                 )}
               </div>
-            ))}
+              ))
+            )}
           </div>
 
           {/* Detailed View */}
@@ -355,7 +355,8 @@ export default function Home() {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div className="bg-blue-50 rounded p-3">
                       <div className="font-medium text-blue-900 mb-2">Job Requirements</div>
-                      <div classselectedJob.minExperience}-{selectedJob.maxExperience} years exp</div>
+                      <div className="space-y-1 text-blue-800">
+                        <div>• {selectedJob.minExperience}-{selectedJob.maxExperience} years exp</div>
                         <div>• {selectedJob.requiredLevel} level</div>
                         <div>• {selectedJob.requiredIndustry.join('/')}</div>
                         <div>• Managerial: {selectedJob.mustHaveManagerial ? 'Required' : 'Optional'}</div>
@@ -390,8 +391,7 @@ export default function Home() {
                         <div className="text-xs text-gray-500 mb-1">Candidate Has</div>
                         <div className="flex flex-wrap gap-1">
                           {selectedCandidate.skills.map(skill => {
-                            const isRequired = selectedJob=> {
-                            const isRequired = jobRequirements.requiredSkills.some(
+                            const isRequired = selectedJob.requiredSkills.some(
                               req => req.name.toLowerCase() === skill.toLowerCase()
                             );
                             return (
