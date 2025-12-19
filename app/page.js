@@ -10,6 +10,8 @@ export default function Home() {
   const [sortBy, setSortBy] = useState('score');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchFilter, setSearchFilter] = useState('all'); // all, skills, experience, industry
+  const [compareMode, setCompareMode] = useState(false);
+  const [selectedForCompare, setSelectedForCompare] = useState([]);
 
   const handleCompanyClick = (company) => {
     setSelectedCompany(company);
@@ -22,6 +24,71 @@ export default function Home() {
     setSelectedJob(job);
     setSelectedCandidate(null); // Reset selected candidate
   };
+
+  const toggleCompareMode = () => {
+    setCompareMode(!compareMode);
+    setSelectedForCompare([]);
+  };
+
+  const toggleCandidateForCompare = (candidate) => {
+    if (selectedForCompare.find(c => c.id === candidate.id)) {
+      setSelectedForCompare(selectedForCompare.filter(c => c.id !== candidate.id));
+    } else if (selectedForCompare.length < 3) {
+      setSelectedForCompare([...selectedForCompare, candidate]);
+    }
+  };
+
+  const generateAIComparison = () => {
+    if (selectedForCompare.length < 2) return null;
+
+    const comparisons = selectedForCompare.map(c => ({
+      ...c,
+      matchData: calculateMatchScore(c, selectedJob)
+    }));
+
+    // Sort by score
+    comparisons.sort((a, b) => b.matchData.score - a.matchData.score);
+    
+    const best = comparisons[0];
+    const bestReasons = [];
+    
+    // Analyze why this is the best
+    if (best.matchData.score >= 80) {
+      bestReasons.push(`Exceptional match with ${best.matchData.score}% compatibility`);
+    } else if (best.matchData.score >= 60) {
+      bestReasons.push(`Strong match with ${best.matchData.score}% compatibility`);
+    }
+    
+    if (best.yearsOfExperience >= selectedJob.minExperience) {
+      bestReasons.push(`Meets experience requirement (${best.yearsOfExperience} years)`);
+    }
+    
+    const skillMatches = best.skills.filter(skill => 
+      selectedJob.requiredSkills.some(req => req.name.toLowerCase() === skill.toLowerCase())
+    );
+    if (skillMatches.length > 0) {
+      bestReasons.push(`Strong technical fit with ${skillMatches.length}/${selectedJob.requiredSkills.length} required skills`);
+    }
+    
+    if (best.hasManagerialExp && selectedJob.mustHaveManagerial) {
+      bestReasons.push(`Has required managerial experience`);
+    }
+
+    const industryMatch = best.industry.some(ind => 
+      selectedJob.requiredIndustry.some(req => req.toLowerCase() === ind.toLowerCase())
+    );
+    if (industryMatch) {
+      bestReasons.push(`Relevant industry background`);
+    }
+
+    return {
+      recommended: best,
+      reasons: bestReasons,
+      comparisons
+    };
+  };
+
+  const aiComparison = compareMode && selectedForCompare.length >= 2 ? generateAIComparison() : null;
 
   // Calculate scores for all candidates
   const candidatesWithScores = candidates.map(candidate => ({
@@ -202,11 +269,55 @@ export default function Home() {
           )}
         </div>
 
+        {/* Compare Mode Bar */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={toggleCompareMode}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                  compareMode
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {compareMode ? '✓ Compare Mode Active' : '🔄 Compare Candidates'}
+              </button>
+              {compareMode && (
+                <span className="text-sm text-gray-600">
+                  {selectedForCompare.length}/3 selected
+                </span>
+              )}
+            </div>
+            {compareMode && selectedForCompare.length >= 2 && (
+              <button
+                onClick={() => !compareMode && setSelectedCandidate(candidate)}
+                className={`bg-white rounded-lg shadow-sm border-2 p-4 cursor-pointer transition-all hover:shadow-md ${
+                  compareMode && selectedForCompare.find(c => c.id === candidate.id)
+                    ? 'border-purple-500 bg-purple-50'
+                    : selectedCandidate?.id === candidate.id
+                    ? 'border-blue-500'
+                   
+                🤖 View AI Comparison
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* Quick Search Tips */}
-        {!searchQuery && (
+        {!searchQuery && !compareMode && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
             <div className="text-sm text-blue-900">
               💡 <strong>Quick Search Examples:</strong> Try "Python", "5 years", "Banking", "Senior", "Django"
+            </div>
+          </div>
+        )}
+
+        {/* Compare Mode Instructions */}
+        {compareMode && (
+          <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-4">
+            <div className="text-sm text-purple-900">
+              🤖 <strong>Compare Mode:</strong> Select 2-3 candidates to get AI-powered comparison and recommendation
             </div>
           </div>
         )}
@@ -228,7 +339,19 @@ export default function Home() {
                 className={`bg-white rounded-lg shadow-sm border-2 p-4 cursor-pointer transition-all hover:shadow-md ${
                   selectedCandidate?.id === candidate.id ? 'border-blue-500' : 'border-gray-200'
                 } ${candidate.matchData.isSpam ? 'opacity-60' : ''}`}
-              >
+              >{compareMode && (
+                        <input
+                          type="checkbox"
+                          checked={selectedForCompare.find(c => c.id === candidate.id) !== undefined}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            toggleCandidateForCompare(candidate);
+                          }}
+                          disabled={!selectedForCompare.find(c => c.id === candidate.id) && selectedForCompare.length >= 3}
+                          className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500"
+                        />
+                      )}
+                      
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
@@ -271,9 +394,98 @@ export default function Home() {
                           +{candidate.matchData.reasons.length - 2} more reason{candidate.matchData.reasons.length - 2 > 1 ? 's' : ''}
                         </div>
                       )}
+                    </div>/ AI Comparison */}
+          <div className="lg:sticky lg:top-8 lg:self-start">
+            {compareMode && aiComparison ? (
+              <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg shadow-lg border-2 border-purple-300 p-6">
+                <div className="bg-white rounded-lg p-4 mb-4 border-l-4 border-yellow-500">
+                  <div className="flex items-start gap-2">
+                    <span className="text-2xl">⚠️</span>
+                    <div>
+                      <div className="font-semibold text-gray-900 mb-1">AI Recommendation Disclaimer</div>
+                      <div className="text-sm text-gray-600">
+                        This recommendation is generated by AI analysis. Please use your own judgment and take your own risk when making hiring decisions.
+                      </div>
                     </div>
                   </div>
-                )}
+                </div>
+
+                <div className="mb-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="text-2xl">🤖</span>
+                    <h2 className="text-xl font-bold text-gray-900">AI Comparison Analysis</h2>
+                  </div>
+                  
+                  <div className="bg-gradient-to-r from-green-100 to-emerald-100 rounded-lg p-4 mb-4 border-2 border-green-300">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xl">🏆</span>
+                      <h3 className="text-lg font-semibold text-gray-900">Recommended Candidate</h3>
+                    </div>
+                    <div className="text-2xl font-bold text-gray-900 mb-2">{aiComparison.recommended.name}</div>
+                    <div className="text-sm text-gray-700 mb-3">{aiComparison.recommended.lastPosition}</div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className={`px-4 py-2 rounded-lg text-lg font-bold ${getScoreColor(aiComparison.recommended.matchData.score)}`}>
+                        {aiComparison.recommended.matchData.score}% Match
+                      </span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="font-medium text-gray-900 mb-1">🎯 Why This Candidate:</div>
+                      {aiComparison.reasons.map((reason, idx) => (
+                        <div key={idx} className="text-sm text-gray-800 flex items-start">
+                          <span className="mr-2">✓</span>
+                          <span>{reason}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-gray-900 mb-3">📊 All Candidates Comparison</h3>
+                  {aiComparison.comparisons.map((candidate, idx) => (
+                    <div key={candidate.id} className={`rounded-lg p-4 border-2 ${
+                      idx === 0 ? 'bg-green-50 border-green-300' : 'bg-white border-gray-200'
+                    }`}>
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            {idx === 0 && <span className="text-lg">🥇</span>}
+                            {idx === 1 && <span className="text-lg">🥈</span>}
+                            {idx === 2 && <span className="text-lg">🥉</span>}
+                            <div className="font-semibold text-gray-900">{candidate.name}</div>
+                          </div>
+                          <div className="text-xs text-gray-600 mt-1">{candidate.lastPosition}</div>
+                        </div>
+                        <div className={`px-3 py-1 rounded-md font-semibold ${getScoreColor(candidate.matchData.score)}`}>
+                          {candidate.matchData.score}%
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 text-xs mt-3">
+                        <div>
+                          <div className="text-gray-500">Experience</div>
+                          <div className="font-medium">{candidate.yearsOfExperience} years</div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500">Level</div>
+                          <div className="font-medium">{candidate.currentLevel}</div>
+                        </div>
+                        <div>
+                          <div className="text-gray-500">Manager</div>
+                          <div className="font-medium">{candidate.hasManagerialExp ? 'Yes' : 'No'}</div>
+                        </div>
+                      </div>
+                      {candidate.matchData.gaps.length > 0 && (
+                        <div className="mt-2 pt-2 border-t border-gray-200">
+                          <div className="text-xs text-red-600">
+                            ⚠️ {candidate.matchData.gaps.length} gap(s): {candidate.matchData.gaps[0].replace('✗ ', '')}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) :    )}
 
                 {candidate.matchData.gaps.length > 0 && (
                   <div className="mt-2 pt-2 border-t border-gray-100">
