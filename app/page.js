@@ -254,6 +254,28 @@ export default function Home() {
                   {candidate.hasManagerialExp && <span>👥 Manager</span>}
                 </div>
 
+                {/* Match Reason Summary */}
+                {candidate.matchData.score > 0 && (
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <div className="text-xs font-medium text-gray-700 mb-1">
+                      💡 Match {candidate.matchData.score}% because:
+                    </div>
+                    <div className="space-y-1">
+                      {candidate.matchData.reasons.slice(0, 2).map((reason, idx) => (
+                        <div key={idx} className="text-xs text-green-600 flex items-start">
+                          <span className="mr-1">•</span>
+                          <span>{reason}</span>
+                        </div>
+                      ))}
+                      {candidate.matchData.reasons.length > 2 && (
+                        <div className="text-xs text-gray-500 italic">
+                          +{candidate.matchData.reasons.length - 2} more reason{candidate.matchData.reasons.length - 2 > 1 ? 's' : ''}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {candidate.matchData.gaps.length > 0 && (
                   <div className="mt-2 pt-2 border-t border-gray-100">
                     <div className="text-xs text-red-600">
