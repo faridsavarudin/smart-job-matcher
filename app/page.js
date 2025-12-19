@@ -389,6 +389,7 @@ export default function Home() {
                       )}
                     </div>
                   </div>
+                )}
 
                 {candidate.matchData.gaps.length > 0 && (
                   <div className="mt-2 pt-2 border-t border-gray-100">
