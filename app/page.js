@@ -388,7 +388,9 @@ export default function Home() {
                     : selectedCandidate?.id === candidate.id
                     ? 'border-blue-500'
                     : 'border-gray-200'
-                } ${candidate.matchData.isSpam ? 'opacity-60' : ''}`}
+                } ${candidate.matchData.isSpam && candidate.matchData.score < 80 ? 'opacity-60' : ''} ${
+                  candidate.matchData.isSpam && candidate.matchData.score >= 80 ? 'border-l-4 border-l-orange-500' : ''
+                }`}
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1">
@@ -407,8 +409,12 @@ export default function Home() {
                       )}
                       <h3 className="font-semibold text-gray-900">{candidate.name}</h3>
                       {candidate.matchData.isSpam && (
-                        <span className="px-2 py-0.5 text-xs font-medium bg-red-100 text-red-700 rounded">
-                          🚫 SPAM
+                        <span className={`px-2 py-0.5 text-xs font-medium rounded ${
+                          candidate.matchData.score >= 80 
+                            ? 'bg-orange-100 text-orange-700 border border-orange-300' 
+                            : 'bg-red-100 text-red-700'
+                        }`}>
+                          {candidate.matchData.score >= 80 ? '⚠️ FLAGGED' : '🚫 SPAM'}
                         </span>
                       )}
                     </div>
@@ -559,11 +565,33 @@ export default function Home() {
                     <p className="text-sm text-gray-600">{selectedCandidate.email}</p>
                   </div>
                   {selectedCandidate.matchData.isSpam && (
-                    <span className="px-3 py-1 text-sm font-medium bg-red-100 text-red-700 rounded-md">
-                      🚫 SPAM PROFILE
+                    <span className={`px-3 py-1 text-sm font-medium rounded-md ${
+                      selectedCandidate.matchData.score >= 80
+                        ? 'bg-orange-100 text-orange-700 border border-orange-300'
+                        : 'bg-red-100 text-red-700'
+                    }`}>
+                      {selectedCandidate.matchData.score >= 80 ? '⚠️ FLAGGED' : '🚫 SPAM'}
                     </span>
                   )}
                 </div>
+
+                {selectedCandidate.matchData.isSpam && selectedCandidate.matchData.score >= 80 && (
+                  <div className="mb-6 bg-orange-50 border-l-4 border-orange-500 p-4 rounded">
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl">⚠️</span>
+                      <div>
+                        <div className="font-semibold text-orange-900 mb-1">Excellent Match but Flagged as Spam</div>
+                        <div className="text-sm text-orange-800">
+                          This candidate has {selectedCandidate.matchData.score}% match score but was flagged due to:
+                          <span className="font-medium"> {selectedCandidate.spamReason || 'suspicious activity'}</span>
+                        </div>
+                        <div className="text-sm text-orange-700 mt-2">
+                          💡 <strong>Recommendation:</strong> Review manually before proceeding. They may be qualified but need verification.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className={`rounded-lg p-4 mb-6 border-2 ${getScoreColor(selectedCandidate.matchData.score)}`}>
                   <div className="flex items-center justify-between mb-2">
