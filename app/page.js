@@ -304,7 +304,7 @@ export default function Home() {
             </div>
             <div className="bg-white rounded-lg p-4 border border-red-200">
               <div className="text-2xl font-bold text-red-600">{stats.poor}</div>
-              <div className="text-xs text-gray-600">Poor (<40%)</div>
+              <div className="text-xs text-gray-600">Poor (&lt;40%)</div>
               <div className="text-xs text-gray-500 mt-1">{stats.total > 0 ? ((stats.poor/stats.total)*100).toFixed(0) : 0}%</div>
             </div>
           </div>
