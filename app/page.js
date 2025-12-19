@@ -290,16 +290,9 @@ export default function Home() {
               )}
             </div>
             {compareMode && selectedForCompare.length >= 2 && (
-              <button
-                onClick={() => !compareMode && setSelectedCandidate(candidate)}
-                className={`bg-white rounded-lg shadow-sm border-2 p-4 cursor-pointer transition-all hover:shadow-md ${
-                  compareMode && selectedForCompare.find(c => c.id === candidate.id)
-                    ? 'border-purple-500 bg-purple-50'
-                    : selectedCandidate?.id === candidate.id
-                    ? 'border-blue-500'
-                   
+              <span className="text-sm text-purple-700 font-medium">
                 🤖 View AI Comparison
-              </button>
+              </span>
             )}
           </div>
         </div>
@@ -394,7 +387,22 @@ export default function Home() {
                           +{candidate.matchData.reasons.length - 2} more reason{candidate.matchData.reasons.length - 2 > 1 ? 's' : ''}
                         </div>
                       )}
-                    </div>/ AI Comparison */}
+                    </div>
+                  </div>
+
+                {candidate.matchData.gaps.length > 0 && (
+                  <div className="mt-2 pt-2 border-t border-gray-100">
+                    <div className="text-xs text-red-600">
+                      ⚠️ {candidate.matchData.gaps.length} gap(s) found
+                    </div>
+                  </div>
+                )}
+              </div>
+              ))
+            )}
+          </div>
+
+          {/* AI Comparison */}
           <div className="lg:sticky lg:top-8 lg:self-start">
             {compareMode && aiComparison ? (
               <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg shadow-lg border-2 border-purple-300 p-6">
@@ -485,18 +493,7 @@ export default function Home() {
                   ))}
                 </div>
               </div>
-            ) :    )}
-
-                {candidate.matchData.gaps.length > 0 && (
-                  <div className="mt-2 pt-2 border-t border-gray-100">
-                    <div className="text-xs text-red-600">
-                      ⚠️ {candidate.matchData.gaps.length} gap(s) found
-                    </div>
-                  </div>
-                )}
-              </div>
-              ))
-            )}
+            )
           </div>
 
           {/* Detailed View */}
