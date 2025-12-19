@@ -12,6 +12,10 @@ export default function Home() {
   const [searchFilter, setSearchFilter] = useState('all');
   const [compareMode, setCompareMode] = useState(false);
   const [selectedForCompare, setSelectedForCompare] = useState([]);
+  const [showCVUpload, setShowCVUpload] = useState(false);
+  const [parsedCV, setParsedCV] = useState(null);
+  const [allCandidates, setAllCandidates] = useState(candidates);
+  const [isParsingCV, setIsParsingCV] = useState(false);
 
   const handleCompanyClick = (company) => {
     setSelectedCompany(company);
@@ -88,7 +92,59 @@ export default function Home() {
 
   const aiComparison = compareMode && selectedForCompare.length >= 2 ? generateAIComparison() : null;
 
-  const candidatesWithScores = candidates.map(candidate => ({
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setIsParsingCV(true);
+    
+    // Simulate CV parsing (in real app, this would call an AI service)
+    setTimeout(() => {
+      const mockParsedData = {
+        name: "Extracted Name",
+        email: `${file.name.split('.')[0].toLowerCase()}@email.com`,
+        yearsOfExperience: Math.floor(Math.random() * 8) + 3,
+        currentLevel: ["Junior", "Mid-Level", "Senior"][Math.floor(Math.random() * 3)],
+        hasManagerialExp: Math.random() > 0.5,
+        industry: ["Technology", "Banking", "E-commerce"].slice(0, Math.floor(Math.random() * 2) + 1),
+        skills: ["Python", "JavaScript", "Java", "React", "Node.js", "SQL"].slice(0, Math.floor(Math.random() * 4) + 2),
+        lastPosition: "Software Engineer at Tech Company",
+        education: "Bachelor's Degree in Computer Science",
+        fileName: file.name
+      };
+      
+      setParsedCV(mockParsedData);
+      setIsParsingCV(false);
+    }, 2000);
+  };
+
+  const handleAddCandidate = () => {
+    if (!parsedCV) return;
+
+    const newCandidate = {
+      id: allCandidates.length + 1,
+      name: parsedCV.name,
+      email: parsedCV.email,
+      yearsOfExperience: parsedCV.yearsOfExperience,
+      currentLevel: parsedCV.currentLevel,
+      hasManagerialExp: parsedCV.hasManagerialExp,
+      industry: parsedCV.industry,
+      skills: parsedCV.skills,
+      lastPosition: parsedCV.lastPosition,
+      education: parsedCV.education,
+      isSpam: false,
+      cvQuality: "high"
+    };
+
+    setAllCandidates([...allCandidates, newCandidate]);
+    setParsedCV(null);
+    setShowCVUpload(false);
+    
+    // Show success message or notification here
+    alert(`✅ ${newCandidate.name} has been added successfully!`);
+  };
+
+  const candidatesWithScores = allCandidates.map(candidate => ({
     ...candidate,
     matchData: calculateMatchScore(candidate, selectedJob)
   }));
@@ -152,10 +208,17 @@ export default function Home() {
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
-            <h1 className="text-3xl font-bold text-gray-900">Smart Job Matcher</h1>
-            <div className="text-sm text-gray-500">ASTRNT - The Relevance Engine</div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Smart Job Matcher</h1>
+              <p className="text-gray-600">CV Parsing & Smart Match for High-Volume Hiring</p>
+            </div>
+            <button
+              onClick={() => setShowCVUpload(true)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-all flex items-center gap-2"
+            >
+              📄 Upload CV
+            </button>
           </div>
-          <p className="text-gray-600">CV Parsing & Smart Match for High-Volume Hiring</p>
         </div>
 
         <div className="mb-6">
@@ -605,6 +668,191 @@ export default function Home() {
                 </div>
               </div>
             ) : (
+
+        {/* CV Upload Modal */}
+        {showCVUpload && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900">📄 Upload & Parse CV</h2>
+                  <button
+                    onClick={() => {
+                      setShowCVUpload(false);
+                      setParsedCV(null);
+                    }}
+                    className="text-gray-400 hover:text-gray-600 text-2xl"
+                  >
+                    ×
+                  </button>
+                </div>
+
+                {!parsedCV && !isParsingCV && (
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                    <div className="text-4xl mb-4">📁</div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Upload CV Document</h3>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Support: PDF, DOC, DOCX (Max 5MB)
+                    </p>
+                    <label className="inline-block">
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                      />
+                      <span className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 cursor-pointer inline-block">
+                        Choose File
+                      </span>
+                    </label>
+                    <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <div className="flex items-start gap-2">
+                        <span className="text-yellow-600">⚠️</span>
+                        <div className="text-sm text-yellow-800 text-left">
+                          <strong>Demo Mode:</strong> This is a simulated CV parser. In production, this would use AI to extract real data from uploaded CVs.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {isParsingCV && (
+                  <div className="text-center py-12">
+                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent mb-4"></div>
+                    <p className="text-gray-600">🤖 AI is parsing the CV...</p>
+                    <p className="text-sm text-gray-500 mt-2">Extracting information...</p>
+                  </div>
+                )}
+
+                {parsedCV && (
+                  <div>
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                      <div className="flex items-center gap-2">
+                        <span className="text-green-600 text-xl">✓</span>
+                        <div>
+                          <div className="font-semibold text-green-900">CV Parsed Successfully!</div>
+                          <div className="text-sm text-green-700">File: {parsedCV.fileName}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                        <input
+                          type="text"
+                          value={parsedCV.name}
+                          onChange={(e) => setParsedCV({...parsedCV, name: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input
+                          type="email"
+                          value={parsedCV.email}
+                          onChange={(e) => setParsedCV({...parsedCV, email: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Years of Experience</label>
+                          <input
+                            type="number"
+                            value={parsedCV.yearsOfExperience}
+                            onChange={(e) => setParsedCV({...parsedCV, yearsOfExperience: parseInt(e.target.value)})}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Current Level</label>
+                          <select
+                            value={parsedCV.currentLevel}
+                            onChange={(e) => setParsedCV({...parsedCV, currentLevel: e.target.value})}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          >
+                            <option value="Junior">Junior</option>
+                            <option value="Mid-Level">Mid-Level</option>
+                            <option value="Senior">Senior</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Last Position</label>
+                        <input
+                          type="text"
+                          value={parsedCV.lastPosition}
+                          onChange={(e) => setParsedCV({...parsedCV, lastPosition: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Industry (comma-separated)</label>
+                        <input
+                          type="text"
+                          value={parsedCV.industry.join(', ')}
+                          onChange={(e) => setParsedCV({...parsedCV, industry: e.target.value.split(',').map(s => s.trim())})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Skills (comma-separated)</label>
+                        <input
+                          type="text"
+                          value={parsedCV.skills.join(', ')}
+                          onChange={(e) => setParsedCV({...parsedCV, skills: e.target.value.split(',').map(s => s.trim())})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Education</label>
+                        <input
+                          type="text"
+                          value={parsedCV.education}
+                          onChange={(e) => setParsedCV({...parsedCV, education: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={parsedCV.hasManagerialExp}
+                          onChange={(e) => setParsedCV({...parsedCV, hasManagerialExp: e.target.checked})}
+                          className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                        />
+                        <label className="text-sm font-medium text-gray-700">Has Managerial Experience</label>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3 mt-6 pt-6 border-t border-gray-200">
+                      <button
+                        onClick={handleAddCandidate}
+                        className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
+                      >
+                        ✓ Add Candidate
+                      </button>
+                      <button
+                        onClick={() => setParsedCV(null)}
+                        className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200"
+                      >
+                        ← Back
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
                 <div className="text-gray-400 text-lg mb-2">👈</div>
                 <p className="text-gray-500">Select a candidate to view detailed match analysis</p>
