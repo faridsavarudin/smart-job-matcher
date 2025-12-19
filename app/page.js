@@ -273,6 +273,105 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Stats Summary Chart */}
+        <div className="mb-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 border border-blue-200">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">📊 Candidate Match Summary</h2>
+              <p className="text-sm text-gray-600">For {selectedJob.title} at {selectedCompany.name}</p>
+            </div>
+            <div className="text-right">
+              <div className="text-3xl font-bold text-gray-900">{stats.total}</div>
+              <div className="text-sm text-gray-600">Total Candidates</div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div className="bg-white rounded-lg p-4 border border-green-200">
+              <div className="text-2xl font-bold text-green-600">{stats.excellent}</div>
+              <div className="text-xs text-gray-600">Excellent (≥80%)</div>
+              <div className="text-xs text-gray-500 mt-1">{stats.total > 0 ? ((stats.excellent/stats.total)*100).toFixed(0) : 0}%</div>
+            </div>
+            <div className="bg-white rounded-lg p-4 border border-yellow-200">
+              <div className="text-2xl font-bold text-yellow-600">{stats.good}</div>
+              <div className="text-xs text-gray-600">Good (60-79%)</div>
+              <div className="text-xs text-gray-500 mt-1">{stats.total > 0 ? ((stats.good/stats.total)*100).toFixed(0) : 0}%</div>
+            </div>
+            <div className="bg-white rounded-lg p-4 border border-orange-200">
+              <div className="text-2xl font-bold text-orange-600">{stats.fair}</div>
+              <div className="text-xs text-gray-600">Fair (40-59%)</div>
+              <div className="text-xs text-gray-500 mt-1">{stats.total > 0 ? ((stats.fair/stats.total)*100).toFixed(0) : 0}%</div>
+            </div>
+            <div className="bg-white rounded-lg p-4 border border-red-200">
+              <div className="text-2xl font-bold text-red-600">{stats.poor}</div>
+              <div className="text-xs text-gray-600">Poor (<40%)</div>
+              <div className="text-xs text-gray-500 mt-1">{stats.total > 0 ? ((stats.poor/stats.total)*100).toFixed(0) : 0}%</div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-medium text-gray-700">Match Distribution</span>
+              <div className="flex items-center gap-4 text-xs">
+                <span className="text-green-600">✓ Matched: {stats.matched} ({stats.total > 0 ? ((stats.matched/stats.total)*100).toFixed(0) : 0}%)</span>
+                <span className="text-red-600">✗ Not Matched: {stats.notMatched} ({stats.total > 0 ? ((stats.notMatched/stats.total)*100).toFixed(0) : 0}%)</span>
+              </div>
+            </div>
+            <div className="w-full h-8 bg-gray-200 rounded-full overflow-hidden flex">
+              {stats.excellent > 0 && (
+                <div 
+                  className="bg-green-500 flex items-center justify-center text-white text-xs font-bold"
+                  style={{ width: `${(stats.excellent/stats.total)*100}%` }}
+                >
+                  {stats.excellent}
+                </div>
+              )}
+              {stats.good > 0 && (
+                <div 
+                  className="bg-yellow-500 flex items-center justify-center text-white text-xs font-bold"
+                  style={{ width: `${(stats.good/stats.total)*100}%` }}
+                >
+                  {stats.good}
+                </div>
+              )}
+              {stats.fair > 0 && (
+                <div 
+                  className="bg-orange-500 flex items-center justify-center text-white text-xs font-bold"
+                  style={{ width: `${(stats.fair/stats.total)*100}%` }}
+                >
+                  {stats.fair}
+                </div>
+              )}
+              {stats.poor > 0 && (
+                <div 
+                  className="bg-red-500 flex items-center justify-center text-white text-xs font-bold"
+                  style={{ width: `${(stats.poor/stats.total)*100}%` }}
+                >
+                  {stats.poor}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {stats.spam > 0 && (
+            <div className="mt-4 bg-orange-100 border border-orange-300 rounded-lg p-3">
+              <div className="flex items-center gap-2">
+                <span className="text-orange-600 text-xl">⚠️</span>
+                <div className="flex-1">
+                  <span className="text-sm font-semibold text-orange-900">
+                    {stats.spam} candidate{stats.spam > 1 ? 's' : ''} flagged as spam
+                  </span>
+                  {stats.spamButGood > 0 && (
+                    <span className="text-sm text-orange-700 ml-2">
+                      ({stats.spamButGood} with excellent match - needs review)
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
         {selectedCompany && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
