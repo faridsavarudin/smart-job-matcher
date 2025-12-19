@@ -1,16 +1,29 @@
 'use client';
 
 import { useState } from 'react';
-import { candidates, jobRequirements, calculateMatchScore } from '../lib/matchingEngine';
+import { candidates, companies, calculateMatchScore } from '../lib/matchingEngine';
 
 export default function Home() {
   const [selectedCandidate, setSelectedCandidate] = useState(null);
+  const [selectedCompany, setSelectedCompany] = useState(companies[0]);
+  const [selectedJob, setSelectedJob] = useState(companies[0].jobs[0]);
   const [sortBy, setSortBy] = useState('score');
+
+  const handleCompanyClick = (company) => {
+    setSelectedCompany(company);
+    setSelectedJob(company.jobs[0]); // Select first job of the company
+    setSelectedCandidate(null); // Reset selected candidate
+  };
+
+  const handleJobClick = (job) => {
+    setSelectedJob(job);
+    setSelectedCandidate(null); // Reset selected candidate
+  };
 
   // Calculate scores for all candidates
   const candidatesWithScores = candidates.map(candidate => ({
     ...candidate,
-    matchData: calculateMatchScore(candidate, jobRequirements)
+    matchData: calculateMatchScore(candidate, selectedJob)
   }));
 
   // Sort candidates
@@ -45,28 +58,63 @@ export default function Home() {
           <p className="text-gray-600">CV Parsing & Smart Match for High-Volume Hiring</p>
         </div>
 
-        {/* Job Requirements Card */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">📋 Current Job Opening</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <div className="text-sm text-gray-500">Position</div>
-              <div className="font-medium">{jobRequirements.title}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-500">Experience</div>
-              <div className="font-medium">{jobRequirements.minExperience}-{jobRequirements.maxExperience} years</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-500">Industry</div>
-              <div className="font-medium">{jobRequirements.requiredIndustry.join(', ')}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-500">Total Applicants</div>
-              <div className="font-medium">{candidates.length}</div>
-            </div>
+        {/* Company Selector */}
+        <div className="mb-6">
+          <h2 className="text-sm font-semibold text-gray-700 mb-3">🏢 Select Company</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {companies.map(company => (
+              <button
+                key={company.id}
+                onClick={() => handleCompanyClick(company)}
+                className={`text-left p-4 rounded-lg border-2 transition-all ${
+                  selectedCompany.id === company.id
+                    ? 'border-blue-500 bg-blue-50 shadow-md'
+                    : 'border-gray-200 bg-white hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="text-3xl">{company.logo}</span>
+                  <div>
+                    <div className="font-semibold text-gray-900">{company.name}</div>
+                    <div className="text-xs text-gray-500">{company.description}</div>
+                  </div>
+                </div>
+                <div className="text-xs text-gray-600">
+                  {company.jobs.length} open position{company.jobs.length > 1 ? 's' : ''}
+                </div>
+              </button>
+            ))}
           </div>
         </div>
+
+        {/* Job Openings */}
+        {selectedCompany && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              📋 Open Positions at {selectedCompany.name}
+            </h2>
+            <div className="space-y-2">
+              {selectedCompany.jobs.map(job => (
+                <button
+                  key={job.id}
+                  onClick={() => handleJobClick(job)}
+                  className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+                    selectedJob.id === job.id
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-100 hover:border-gray-200'
+                  }`}
+                >
+                  <div className="font-medium text-gray-900 mb-1">{job.title}</div>
+                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                    <span>📅 {job.minExperience}-{job.maxExperience} years</span>
+                    <span>🏢 {job.requiredIndustry.slice(0, 2).join(', ')}</span>
+                    <span>📍 {job.location}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Controls */}
         <div className="flex items-center justify-between mb-4">
