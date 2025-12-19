@@ -668,6 +668,13 @@ export default function Home() {
                 </div>
               </div>
             ) : (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+                <div className="text-gray-400 text-lg mb-2">👈</div>
+                <p className="text-gray-500">Select a candidate to view detailed match analysis</p>
+              </div>
+            )}
+          </div>
+        </div>
 
         {/* CV Upload Modal */}
         {showCVUpload && (
@@ -853,13 +860,6 @@ export default function Home() {
             </div>
           </div>
         )}
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-                <div className="text-gray-400 text-lg mb-2">👈</div>
-                <p className="text-gray-500">Select a candidate to view detailed match analysis</p>
-              </div>
-            )}
-          </div>
-        </div>
       </div>
     </main>
   );
