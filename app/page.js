@@ -8,11 +8,14 @@ export default function Home() {
   const [selectedCompany, setSelectedCompany] = useState(companies[0]);
   const [selectedJob, setSelectedJob] = useState(companies[0].jobs[0]);
   const [sortBy, setSortBy] = useState('score');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchFilter, setSearchFilter] = useState('all'); // all, skills, experience, industry
 
   const handleCompanyClick = (company) => {
     setSelectedCompany(company);
     setSelectedJob(company.jobs[0]); // Select first job of the company
     setSelectedCandidate(null); // Reset selected candidate
+    setSearchQuery(''); // Reset search
   };
 
   const handleJobClick = (job) => {
@@ -26,8 +29,44 @@ export default function Home() {
     matchData: calculateMatchScore(candidate, selectedJob)
   }));
 
+  // Filter candidates based on search
+  const filteredCandidates = candidatesWithScores.filter(candidate => {
+    if (!searchQuery.trim()) return true;
+    
+    const query = searchQuery.toLowerCase();
+    
+    if (searchFilter === 'all') {
+      return (
+        candidate.name.toLowerCase().includes(query) ||
+        candidate.lastPosition.toLowerCase().includes(query) ||
+        candidate.skills.some(skill => skill.toLowerCase().includes(query)) ||
+        candidate.industry.some(ind => ind.toLowerCase().includes(query)) ||
+        candidate.yearsOfExperience.toString().includes(query) ||
+        candidate.currentLevel.toLowerCase().includes(query)
+      );
+    }
+    
+    if (searchFilter === 'skills') {
+      return candidate.skills.some(skill => skill.toLowerCase().includes(query));
+    }
+    
+    if (searchFilter === 'experience') {
+      return (
+        candidate.yearsOfExperience.toString().includes(query) ||
+        candidate.currentLevel.toLowerCase().includes(query) ||
+        candidate.lastPosition.toLowerCase().includes(query)
+      );
+    }
+    
+    if (searchFilter === 'industry') {
+      return candidate.industry.some(ind => ind.toLowerCase().includes(query));
+    }
+    
+    return true;
+  });
+
   // Sort candidates
-  const sortedCandidates = [...candidatesWithScores].sort((a, b) => {
+  const sortedCandidates = [...filteredCandidates].sort((a, b) => {
     if (sortBy === 'score') return b.matchData.score - a.matchData.score;
     if (sortBy === 'experience') return b.yearsOfExperience - a.yearsOfExperience;
     return 0;
@@ -116,20 +155,69 @@ export default function Home() {
           </div>
         )}
 
-        {/* Controls */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="text-sm text-gray-600">
-            Showing {sortedCandidates.length} candidates
+        {/* Search & Filters */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+          <div className="flex flex-col md:flex-row gap-3">
+            <div className="flex-1">
+              <input
+                type="text"
+                placeholder="Search candidates by name, skills, experience, industry..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <select
+              value={searchFilter}
+              onChange={(e) => setSearchFilter(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">Search All</option>
+              <option value="slength === 0 ? (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+                <div className="text-gray-400 text-4xl mb-2">🔍</div>
+                <p className="text-gray-500 text-lg mb-1">No candidates found</p>
+                <p className="text-gray-400 text-sm">Try different search terms or clear the search</p>
+              </div>
+            ) : (
+              sortedCandidates.kills">Skills Only</option>
+              <option value="experience">Experience Only</option>
+              <option value="industry">Industry Only</option>
+            </select>
+            <select 
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="score">Sort by Match Score</option>
+              <option value="experience">Sort by Experience</option>
+            </select>
           </div>
-          <select 
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="score">Sort by Match Score</option>
-            <option value="experience">Sort by Experience</option>
-          </select>
+          
+          {searchQuery && (
+            <div className="mt-2 flex items-center justify-between">
+              <div className="text-sm text-gray-600">
+                Found {sortedCandidates.length} candidate{sortedCandidates.length !== 1 ? 's' : ''} matching "{searchQuery}"
+              </div>
+              <button
+                onClick={() => setSearchQuery('')}
+                className="text-sm text-blue-600 hover:text-blue-700"
+              >
+                Clear search
+              </button>
+            </div>
+          )}
         </div>
+
+        {/* Quick Search Tips */}
+        {!searchQuery && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+            <div className="text-sm text-blue-900">
+              ))
+             💡 <strong>Quick Search Examples:</strong> Try "Python", "5 years", "Banking", "Senior", "Django"
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Candidates List */}
